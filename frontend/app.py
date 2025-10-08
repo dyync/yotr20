@@ -47,6 +47,7 @@ TR_URL = f'http://container_tr:{os.getenv("TR_PORT")}/t2'
 
 IMAGE_DEFAULT = f'/usr/src/app/image/dragon.png'
 VIDEO_DEFAULT = f'/usr/src/app/video/napoli.mp4'
+TR_DEFAULT = f'/usr/src/app/tr/ho.mp4'
 REQUEST_TIMEOUT = 300
 
 def wait_for_backend():
@@ -1329,10 +1330,10 @@ def trellis_generate(image_prompt):
         print(f'[trellis_generate] >> #22222 got res_json["video_path"] ... {res_json["video_path"]}')
         logging.info(f'[trellis_generate] >> #22222 got res_json["video_path"] ... {res_json["video_path"]}')
         
-        return f'{res_json["result_data"]["output_path"]}'
+        return f'{res_json["video_path"]}',f'{res_json["video_path"]}'
 
     except Exception as e:
-        return f'Error: {e}'
+        return f'Error: {e}',f'Error: {e}'
 
 
 
@@ -2851,7 +2852,7 @@ def create_app():
                     trellis_input = gr.Image(label="Upload Image", type="filepath")
                     trellis_input_path = gr.Textbox(visible=True)    
 
-                    trells_output = gr.Video(value=f'{VIDEO_DEFAULT}', label="Video", show_label=False, visible=True)
+                    trells_output = gr.Video(value=f'{TR_DEFAULT}', label="Video", show_label=False, visible=True)
 
                     btn_trellis_generate = gr.Button("Generate")
 
@@ -2863,7 +2864,7 @@ def create_app():
                     ).then(
                         trellis_generate,
                         trellis_input_path,
-                        trells_output
+                        [trells_output,trellis_output_path]
                     )
 
 

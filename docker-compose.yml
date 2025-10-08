@@ -125,7 +125,7 @@ services:
   tr:
     build:
       context: ./tr
-    image: xoo4foo/tr10:latest
+    image: xoo4foo/tr11:latest
     runtime: nvidia
     deploy:
       resources:
@@ -140,6 +140,7 @@ services:
       - sys_net
     container_name: container_tr
     volumes:
+      - ./tr:/usr/src/app
       - ./video:/usr/src/app/video
       - ./image:/usr/src/app/image  
       - ./utils:/usr/src/app/utils    
