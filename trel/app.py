@@ -126,7 +126,7 @@ def start_redis(req_redis_port):
         raise
 
 app = FastAPI()
-
+app.mount("/vi", StaticFiles(directory="/usr/src/app/tr"), name="vi")
 @app.get("/")
 async def root():
     return 'Hello from video generation server!'

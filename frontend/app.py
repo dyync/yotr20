@@ -47,7 +47,7 @@ TR_URL = f'http://container_tr:{os.getenv("TR_PORT")}/t2'
 
 IMAGE_DEFAULT = f'/usr/src/app/image/dragon.png'
 VIDEO_DEFAULT = f'/usr/src/app/video/napoli.mp4'
-TR_DEFAULT = f'/usr/src/app/tr/ho.mp4'
+TR_DEFAULT = f'/vi/ho.mp4'
 REQUEST_TIMEOUT = 300
 
 def wait_for_backend():
