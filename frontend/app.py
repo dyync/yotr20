@@ -2852,7 +2852,7 @@ def create_app():
                     trellis_input_path = gr.Textbox(visible=True)
                     trellis_output_video = gr.Video(value=f'{VIDEO_DEFAULT}', label="Video", show_label=False, visible=True)
                     with gr.Column():
-                        trellis_image_input = gr.Image(label="Upload Image", image_mode="RGBA", type="pil", height=300, type="filepath")
+                        trellis_image_input = gr.Image(label="Upload Image", image_mode="RGBA", height=300, type="filepath")
                         seed = gr.Slider(0, MAX_SEED, label="Seed", value=0, step=1)
                         randomize_seed = gr.Checkbox(label="Randomize Seed", value=True)
                         ss_strength = gr.Slider(0.0, 10.0, label="Sparse Guidance", value=7.5, step=0.1)
