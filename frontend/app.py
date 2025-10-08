@@ -2853,7 +2853,7 @@ def create_app():
                     trellis_input_path = gr.Textbox(visible=True)    
 
                     trells_output = gr.Video(value=f'{TR_DEFAULT}', label="Video", show_label=False, visible=True)
-
+                    trellis_output_path = gr.Textbox(visible=True)  
                     btn_trellis_generate = gr.Button("Generate")
 
 
