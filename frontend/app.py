@@ -43,6 +43,7 @@ VLLM_URL = f'http://container_vllm_xoo:{os.getenv("VLLM_PORT")}/status'
 BACKEND_URL = f'http://container_backend:{os.getenv("BACKEND_PORT")}/docker'
 IMAGE_URL = f'http://container_image:{os.getenv("IMAGE_PORT")}/generate'
 TRAIN_URL = f'http://container_train:{os.getenv("TRAIN_PORT")}'
+TR_URL = f'http://container_tr:{os.getenv("TR_PORT")}/t2'
 
 IMAGE_DEFAULT = f'/usr/src/app/image/dragon.png'
 VIDEO_DEFAULT = f'/usr/src/app/video/napoli.mp4'
@@ -941,6 +942,9 @@ def get_video_image_path(image_file):
     # return [f'req_file: {image_file}', f'{req_file}']
     return f'req_file: {image_file}'
 
+def get_trellis_image_path(image_file):
+    req_file = image_file
+    return f'{image_file}'
 
 def audio_transcribe(audio_model,audio_path,audio_device,audio_compute_type):  
     try:
@@ -1279,6 +1283,56 @@ def video_generate(video_image,video_input_prompt,video_model,video_device,video
 
 
 
+
+
+
+def trellis_generate(image_prompt):  
+    
+    try:
+
+        global BACKEND_URL
+        global TR_URL
+
+        print(f'[trellis_generate] starting ... image_prompt: {image_prompt}')
+        logging.info(f'[trellis_generate] starting ... image_prompt: {image_prompt}')
+        vllm_stop_response = requests.post(BACKEND_URL, json={
+            "method":"stop",
+            "model":"container_vllm_xoo"
+        }, timeout=60)
+
+
+        print(f'[trellis_generate] vllm_stop_response: {vllm_stop_response} ...')
+        logging.info(f'[trellis_generate] vllm_stop_response: {vllm_stop_response} ...')
+
+
+        print(f'[trellis_generate] IMAGE_URL ... {IMAGE_URL}')
+        logging.info(f'[trellis_generate] IMAGE_URL ... {IMAGE_URL}')
+
+        # print(f'[trellis_generate] getting status ... ')
+        # logging.info(f'[trellis_generate] getting status ... ')
+        
+
+        print(f'[trellis_generate] >> status: "ok" ... starting to generate 3D .... ')
+        logging.info(f'[trellis_generate] >> status: "ok" ... starting to generate 3D .... ')
+
+        response = requests.post(TR_URL, json={
+            "input_image_path": f'{image_prompt}'
+        })
+
+        print(f'[trellis_generate] >> got response #22222 == 200 ... building json ... {response}')
+        logging.info(f'[trellis_generate] >> got response #22222 == 200 ... building json ... {response}')
+        
+        res_json = response.json()
+
+        print(f'[trellis_generate] >> #22222 got res_json ... {res_json}')
+        logging.info(f'[trellis_generate] >> #22222 got res_json ... {res_json}')   
+        print(f'[trellis_generate] >> #22222 got res_json["video_path"] ... {res_json["video_path"]}')
+        logging.info(f'[trellis_generate] >> #22222 got res_json["video_path"] ... {res_json["video_path"]}')
+        
+        return f'{res_json["result_data"]["output_path"]}'
+
+    except Exception as e:
+        return f'Error: {e}'
 
 
 
@@ -2790,9 +2844,90 @@ def create_app():
 
 
 
+
+            with gr.TabItem("3D", id=5):
+
+                with gr.Row():
+                    trial_id = gr.Textbox(visible=True)
+                    trellis_input_path = gr.Textbox(visible=True)
+                    trellis_output_video = gr.Video(value=f'{VIDEO_DEFAULT}', label="Video", show_label=False, visible=True)
+                    with gr.Column():
+                        trellis_image_input = gr.Image(label="Upload Image", image_mode="RGBA", type="pil", height=300, type="filepath")
+                        seed = gr.Slider(0, MAX_SEED, label="Seed", value=0, step=1)
+                        randomize_seed = gr.Checkbox(label="Randomize Seed", value=True)
+                        ss_strength = gr.Slider(0.0, 10.0, label="Sparse Guidance", value=7.5, step=0.1)
+                        ss_steps = gr.Slider(1, 50, label="Sparse Steps", value=12, step=1)
+                        slat_strength = gr.Slider(0.0, 10.0, label="Latent Guidance", value=3.0, step=0.1)
+                        slat_steps = gr.Slider(1, 50, label="Latent Steps", value=12, step=1)
+                        mesh_simplify = gr.Slider(0.9, 0.98, label="Simplify", value=0.95, step=0.01)
+                        texture_size = gr.Slider(512, 2048, label="Texture Size", value=1024, step=512)
+                        btn_trellis_generate = gr.Button("Generate")
+                        extract_glb_btn = gr.Button("Extract GLB", interactive=False)
+                        with gr.Column():
+                            video_output = gr.Video(label="Generated 3D Asset", autoplay=True, loop=True, height=300)
+                            model_output = LitModel3D(label="Extracted GLB", exposure=20.0, height=300)
+                            download_glb = gr.DownloadButton(label="Download GLB", interactive=False)
+
+                    
+                    output_buf = gr.State()
+
+                    trellis_image_input.upload(preprocess_image, inputs=[trellis_image_input], outputs=[trial_id, trellis_image_input])
+                    trellis_image_input.clear(lambda: '', outputs=[trial_id])
+
+                    generate_btn.click(
+                        image_to_3d,
+                        inputs=[trial_id, seed, randomize_seed, ss_strength, ss_steps, slat_strength, slat_steps],
+                        outputs=[output_buf, video_output],
+                    ).then(lambda: gr.Button(interactive=True), outputs=[extract_glb_btn])
+
+                    extract_glb_btn.click(
+                        extract_glb,
+                        inputs=[output_buf, mesh_simplify, texture_size],
+                        outputs=[model_output, download_glb],
+                    ).then(lambda: gr.Button(interactive=True), outputs=[download_glb])
+
+
+                    btn_trellis_generate.click(
+                        get_trellis_image_path,
+                        trellis_image_input,
+                        trellis_input_path
+                    ).then(
+                        audio_transcribe,
+                        [audio_model,audio_path,audio_device,audio_compute_type],
+                        audio_output
+                    )
+
+
+
+
+
+
+
+
+
+
+
+                with gr.Row(visible=False) as row_audio_out:
+                    
+                    audio_output = gr.Textbox(label="Transcription", show_label=False, lines=8)
+                with gr.Row(visible=True) as row_audio_prompt:
+                    audio_input = gr.Audio(label="Upload Audio", type="filepath")
+                    trellis_input = gr.Image(label="Upload Image", type="filepath")
+                with gr.Row() as row_audio_transcribe:
+                    audio_transcribe_btn = gr.Button("AUDIO TO TEXT", variant="primary")
+
+                with gr.Row(visible=True) as row_audio_settings:
+                        with gr.Accordion(("Audio"), open=True, visible=False) as acc_audio:
+                            
+                            audio_model=gr.Dropdown(defaults_frontend['audio_models'], label="Model size", info="Select a Faster-Whisper model")
+                            
+                            audio_device=gr.Radio(["cpu", "cuda"], value="cpu", label="Select architecture", info="Your system supports CUDA!. Make sure all drivers installed. /checkcuda if cuda")
+                            audio_compute_type=gr.Radio(["int8"], value="int8", label="Compute type", info="Select a compute type")
+
+
                 
                                     
-            with gr.TabItem("Interface", id=5):
+            with gr.TabItem("Interface", id=6):
                 with gr.Row(visible=True) as row_interface:
                     with gr.Column(scale=2):
                         with gr.Accordion(("Interface"), open=True, visible=True) as acc_interface:

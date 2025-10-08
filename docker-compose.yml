@@ -175,6 +175,7 @@ services:
       - TTS_PORT=1375
       - VIDEO_PORT=1376
       - TRAIN_PORT=1378
+      - TR_PORT=1379
       - NVIDIA_VISIBLE_DEVICES=all
     volumes:
       - ./frontend:/usr/src/app
