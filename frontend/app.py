@@ -1329,8 +1329,10 @@ def trellis_generate(image_prompt):
         logging.info(f'[trellis_generate] >> #22222 got res_json ... {res_json}')   
         print(f'[trellis_generate] >> #22222 got res_json["video_path"] ... {res_json["video_path"]}')
         logging.info(f'[trellis_generate] >> #22222 got res_json["video_path"] ... {res_json["video_path"]}')
+        print(f'[trellis_generate] >> #22222 got res_json["video_path"] ... {res_json["video_path"]["output_path"]}')
+        logging.info(f'[trellis_generate] >> #22222 got res_json["video_path"]["output_path"] ... {res_json["video_path"]["output_path"]}')
         
-        return f'{res_json["video_path"]}',f'{res_json["video_path"]}'
+        return f'{res_json["video_path"]["output_path"]}',f'{res_json["video_path"]["output_path"]}'
 
     except Exception as e:
         return f'Error: {e}',f'Error: {e}'
